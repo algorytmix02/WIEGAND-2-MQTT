@@ -1,3 +1,4 @@
+this is a modification of the https://github.com/nygma2004/RFID_Wiegand_MQTT code
 # RFID Access Control
 This ESP8266 sketch communicates with a Wiegand RFID reader and keypad. Ket features:
 - Connect ot local MQTT server
