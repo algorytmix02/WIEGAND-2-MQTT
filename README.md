@@ -8,7 +8,8 @@ This ESP8266 sketch communicates with a Wiegand RFID reader and keypad. Ket feat
 - 4 relay outputs to control gates, garage doors, lights, etc.
  Whith d0 for door and d1 for led of the reader
 
-
+Automatic Free open with "c'est la merde" code
+Automatic Free Out with the button
 
 
 
