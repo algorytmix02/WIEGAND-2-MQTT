@@ -1,0 +1,5 @@
+Bonjour, il sagit d'une modification d'un code existant 
+l'original se trouve ici https://github.com/nygma2004/RFID_Wiegand_MQTT
+j'ai rajouter la fonction "c'est la merde" qui permet d'ouvrir la porte hors gestion domotique avec un code modifiable et la gestion de la sortie hors mqtt :
+la porte s'ouvre sans mqtt, et le signal d'ouverture est quand meme envoyé en mqtt pour permettre une gestion d'un scenario.
+j'ai aussi suprimé la partie LED Neopixel, en revanche j'ai rajouter la fonction LED du clavier wiegand via un relais pour la faire clignoter en cas de perte de wifi ou de mqtt
