@@ -28,7 +28,6 @@
 #include <ESP8266mDNS.h>
 #include <PubSubClient.h>           // MQTT support
 #include <Wiegand.h>
-#include <OneWire.h>
 #include "globals.h"
 #include "settings.h"
 #include <ArduinoJson.h>
@@ -38,10 +37,10 @@ MDNSResponder mdns;
 ESP8266WebServer server(80);
 WiFiClient espClient;
 PubSubClient mqtt(mqtt_server, 1883, 0, espClient);
-OneWire ibutton(IBUTTONPIN); // iButton connected on D2.
+
 
 void setup() {
-	Serial.begin(115200);  
+  Serial.begin(115200);  
   // default Wiegand Pin 2 and Pin 3 see image on README.md
   // for non UNO board, use wg.begin(pinD0, pinD1) where pinD0 and pinD1 
   // are the pins connected to D0 and D1 of wiegand reader respectively.
@@ -59,7 +58,7 @@ void setup() {
   digitalWrite(RELAY4, HIGH);
   pinMode(RELAY4, OUTPUT);
   
- 
+
 
   // Setting up wifi connection
   Serial.print(F("Connecting to Wifi"));
@@ -71,24 +70,91 @@ void setup() {
     delay(500);
     Serial.print(F("+"));
     seconds++;
-    
     {
-  if(wg.available())
- 
-  {
+  if (millis()-lastKey > PINTIMEOUT) {
+    if (pin!="") {
+      pin="";
+      lastKey=millis();
+      Serial.println("Pin timeout");
+    }
+  }
+  if(wg.available()) {
     unsigned long wcode = wg.getCode();
-    if ((wcode == codeclamerde )) 
+    int wtype = wg.getWiegandType();
+    Serial.print("Wiegand HEX = ");
+    Serial.print(wcode,HEX);
+    Serial.print(", DECIMAL = ");
+    Serial.print(wcode);
+    Serial.print(", Type W");
+    Serial.print(wtype); 
+ if ((pin == codeclamerde )) 
  { Serial.print (" C'est la merde je deverouille la porte");
        digitalWrite(RELAY1, HIGH);
-      Serial.println("Relay1 off");
-       delay(delaisortie);
+      Serial.println("Relay1 off"); 
+      delay(delaisortie);
       digitalWrite(RELAY1, LOW);
-      Serial.println("Relay1 ON");  
+      Serial.println("Relay1 ON"); 
  }
+    // RFID card was scanned  
+    if ((wtype==26)||(wtype==34)) {
+      String msg;
+      msg = "{\"code\":";
+      msg += wcode;
+      msg += ",\"type\": \"rfid\"}";
+      if ((wcode==badgemaitre1)||(wcode==badgemaitre2)) {
+        
+        Serial.print("badgemaitre");
+         Serial.print (" badge maitre je deverouille la porte");
+       digitalWrite(RELAY1, HIGH);
+       digitalWrite(RELAY3, HIGH);
+      Serial.println("Relay1 off"); 
+      delay(delaisortie);
+      digitalWrite(RELAY1, LOW);
+      digitalWrite(RELAY3, LOW);
+      Serial.println("Relay1 ON");
+        
+      } 
+    }
 
+    // Keypad was used
+    if (wtype==8) {
+      if (wcode==27) {
+        pin+="*";
+        lastKey = millis();
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+      }
+      if (wcode==13) {
+        lastKey = millis();
+        String msg;
+        msg = "{\"code\": \"";
+        msg += pin;
+        msg += "\" ,\"type\": \"pin\"}";
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+        if (millis()-lastPin > PINLIMIT) {
+          pincount++;
+          mqtt.publish(topicEvent, msg.c_str());
+          Serial.print("  -> MQTT sent");
+          pin="";
+          lastPin = millis();
+        } else {
+          mqtt.publish(topicEvent, "{ \"type\": \"pinratelimit\" }");
+          Serial.print("  -> RATELIMITED");
+          pin="";
+        }
+      }
+      if ((wcode>=0)&&(wcode<=9)) {
+        pin+=wcode;
+        lastKey = millis();
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+      }
+    }
+    Serial.println(); 
   }
-  
 }
+
     if (seconds % 2 == 0) {
          digitalWrite(RELAY2, HIGH);
       Serial.println("led clic"); 
@@ -151,6 +217,7 @@ void setup() {
     mqtt.setServer(mqtt_server, 1883);
     mqtt.setCallback(MQTTcallback);
     reconnect();
+    
   }
       
 
@@ -158,21 +225,21 @@ void setup() {
 }
 
 void loop() {
-
+  handleWiegand();
+  handleAnalogInput();
+  handleMQTTStatus();
+  handlePulseReset();
   // Handle MQTT connection/reconnection
   if (mqtt_server!="") {
     if (!mqtt.connected()) {
       reconnect();
+      Serial.println ("coucou");
     }
     mqtt.loop();
     delay(10);
   }
   
-  handleWiegand();
-  handleiButton();
-  handleAnalogInput();
-  handleMQTTStatus();
-  handlePulseReset();
+
   
 }
 
@@ -203,56 +270,7 @@ void handleAnalogInput() {
   }
 }
 
-// Check devices connected to the iButton onewire interface
-// and post the device ID in hex to MQTT
-void handleiButton() {
-  const char * hex = "0123456789abcdef";
-  String code = "";
-  // Search for an iButton and assign the value to the buffer if found.
-  if (!ibutton.search (buffer)){
-     ibutton.reset_search();
-     return;
-  }
-  // At this point an iButton is found
- 
-  for (int x = 0; x<8; x++){
-        code+= hex[(buffer[x]>>4) & 0xF];
-        code+= hex[ buffer[x]     & 0xF];
-  }
-  //Serial.println(code);
- 
-  // Check if this is a iButton
-  if ( buffer[0] != 0x01) {
-    Serial.println("Device is not a iButton");
-    return;
-  } else {
-    //Serial.println("Device is a iButton");
-  }
- 
-  if ( ibutton.crc8( buffer, 7) != buffer[7]) {
-      Serial.println("CRC is not valid!");
-      return;
-  }
 
-  // check if it is not a duplicate scan
-  if ((code == lastiButton)&&(millis()-lastiButtonTime<IBUTTONLIMIT)) {
-    return;
-  }
-
-  lastiButton=code;
-  lastiButtonTime=millis();
-  
-  Serial.print("iButton: ");
-  Serial.print(code);
-
-  String msg;
-  msg = "{\"code\":\"";
-  msg += code;
-  msg += "\",\"type\": \"ibutton\"}";
-  ibuttoncount++;
-  mqtt.publish(topicEvent, msg.c_str());
-  Serial.println("  -> MQTT sent");
-}
 
 // This resets the relay output when it was turned on in pulse mode
 void handlePulseReset() {
@@ -288,7 +306,7 @@ void handleWiegand() {
     Serial.print(wcode);
     Serial.print(", Type W");
     Serial.print(wtype); 
- if ((wcode == codeclamerde )) 
+ if ((pin == codeclamerde )) 
  { Serial.print (" C'est la merde je deverouille la porte");
        digitalWrite(RELAY1, HIGH);
       Serial.println("Relay1 off"); 
@@ -314,7 +332,7 @@ void handleWiegand() {
     }
 
     // Keypad was used
-    if (wtype==4) {
+    if (wtype==8) {
       if (wcode==27) {
         pin+="*";
         lastKey = millis();
@@ -365,8 +383,6 @@ void handleMQTTStatus() {
     mqttStat += rfidcount;
     mqttStat += ",\"pincount\":";
     mqttStat += pincount;
-    mqttStat += ",\"ibuttoncount\":";
-    mqttStat += ibuttoncount;
     mqttStat += "}";
     mqtt.publish(topicStatus, mqttStat.c_str());
     Serial.print(F("Status: "));
@@ -380,27 +396,91 @@ void reconnect() {
   // Loop until we're reconnected
   while (!mqtt.connected())
   {
-        if(wg.available())
- 
-  {
-    unsigned long wcode = wg.getCode();
-    if ((wcode == codeclamerde )) 
- { Serial.print (" C'est la merde je deverouille la porte");
-       digitalWrite(RELAY1, HIGH);
-        digitalWrite(RELAY2, HIGH);
-      Serial.println("Relay1 off"); 
-       delay(delaisortie);
-      digitalWrite(RELAY1, LOW);
-      digitalWrite(RELAY2, LOW);
-      Serial.println("Relay1 ON"); 
- }
-
-  }
+     
   digitalWrite(RELAY2, HIGH);
     delay(500);
      digitalWrite(RELAY2, LOW);
     Serial.print("Attempting MQTT connection...");
     
+  if (millis()-lastKey > PINTIMEOUT) {
+    if (pin!="") {
+      pin="";
+      lastKey=millis();
+      Serial.println("Pin timeout");
+    }
+  }
+  if(wg.available()) {
+    unsigned long wcode = wg.getCode();
+    int wtype = wg.getWiegandType();
+    Serial.print("Wiegand HEX = ");
+    Serial.print(wcode,HEX);
+    Serial.print(", DECIMAL = ");
+    Serial.print(wcode);
+    Serial.print(", Type W");
+    Serial.print(wtype); 
+ 
+    // RFID card was scanned  
+    if ((wtype==26)||(wtype==34)) {
+      String msg;
+      msg = "{\"code\":";
+      msg += wcode;
+      msg += ",\"type\": \"rfid\"}";
+      if ((wcode==badgemaitre1)||(wcode==badgemaitre2)) {
+      Serial.print (" C'est la merde je deverouille la porte");
+       digitalWrite(RELAY1, HIGH);
+      Serial.println("Relay1 off"); 
+      delay(delaisortie);
+      digitalWrite(RELAY1, LOW);
+      Serial.println("Relay1 ON");  
+      } 
+    }
+
+    // Keypad was used
+    if (wtype==32) {
+      if (wcode==27) {
+        pin+="*";
+        lastKey = millis();
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+      }
+      if (wcode==13) {
+        lastKey = millis();
+        String msg;
+        msg = "{\"code\": \"";
+        msg += pin;
+        msg += "\" ,\"type\": \"pin\"}";
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+        if (millis()-lastPin > PINLIMIT) {
+          pincount++;
+          mqtt.publish(topicEvent, msg.c_str());
+          Serial.print("  -> MQTT sent");
+          pin="";
+          lastPin = millis();
+        } else {
+          mqtt.publish(topicEvent, "{ \"type\": \"pinratelimit\" }");
+          Serial.print("  -> RATELIMITED");
+          pin="";
+        }
+      }
+      if ((wcode>=0)&&(wcode<=9)) {
+        pin+=wcode;
+        lastKey = millis();
+        Serial.print(" | PIN = ");
+        Serial.print(pin);
+      }
+      if ((pin == codeclamerde )) 
+ { Serial.print (" C'est la merde je deverouille la porte");
+       digitalWrite(RELAY1, HIGH);
+      Serial.println("Relay1 off"); 
+      delay(delaisortie);
+      digitalWrite(RELAY1, LOW);
+      Serial.println("Relay1 ON"); 
+ }
+    }
+    Serial.println(); 
+  }
+
     // Attempt to connect
     if (mqtt.connect(clientID, mqtt_user, mqtt_password)) {
       Serial.println(F("connected"));
