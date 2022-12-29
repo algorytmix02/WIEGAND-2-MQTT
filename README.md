@@ -1,16 +1,15 @@
-this is a modification of the https://github.com/nygma2004/RFID_Wiegand_MQTT code
+ce code est une modification de  https://github.com/nygma2004/RFID_Wiegand_MQTT code
 # RFID Access Control
-This ESP8266 sketch communicates with a Wiegand RFID reader and keypad. Ket features:
-- Connect ot local MQTT server
-- Send RFID, iButton codes over to MQTT
-- Collect keypad presses and until # is pressed and send as a pin code over MQTT
+la wemos collecte le code et l'envoi en mqtt quand on presse ENT
+le bouton de sortie se fait sur A0
+Le relais de la ventouse ou de la gache sur D0
+le LED du clavier (fil gris) (doit etre connecté au GND pour s'allumer vert) sur d1
+le buzzer sur D3
+la sortie D1 et D3 servent a activer des relais ou bien des optocoupleur (pc817) pour relier GND et LED (fil gris) ou Buzzer (fil violet)
+la sortie se fait automatiquement et remonte en mqtt (sauf en cas de coupure de mqtt allez savoir pourquoi j'ai pas reussit a l'integrer)
+les badges maitres ouvrent la porte si coupure de wifi ou de mqtt (mais pas en cas de connection et scénario foireux)
+Le code "c'est la merde" sert a ouvrir par code en cas de coupure de wifi ou de scénario foireux 
 
-- Use A0 input as a digital input (e.g. state of the gate, garage door)
-- 4 relay outputs to control gates, garage doors, lights, etc.
- Whith d0 for door and d1 for led of the reader
-
-Automatic Free open with "c'est la merde" code
-Automatic Free Out with the button
 
 
 
