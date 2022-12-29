@@ -6,8 +6,10 @@
 #define BRIGHTNESS  64        // Default LED brightness.
 #define ANALOGRATE 250        // Analog input query frequency
 #define PULSEDELAY 250        // Length of the pulse output
-#define codeclamerde 12345           // Ici tu modifie ton code "c'est la merde" qui deverouille la porte quoi qu'il arrive
-#define delaisortie 5000      // ici le delais de sortie aprés avoir relacher ton BP, sauf si pas de wifi ou mqtt c'est l'inverse
+#define badgemaitre1 7549741 // badge maitre 1 qui sert a ouvrir la porte coute que coute ( voir au dos du badge aprés les 000)
+#define badgemaitre2 8406068
+#define delaisortie 5000      // ici le delai de sortie aprés avoir relacher ton BP, sauf si pas de wifi ou mqtt c'est l'inverse
+const char *codeclamerde="12345";           // Ici tu modifie ton code "c'est la merde" qui deverouille la porte quoi qu'il arrive
 const char *ssid = "SSID";                     // Wifi SSID
 const char *password = "MDP";              // Wifi password
 const char* mqtt_server = "IPMOSQUITTO";               // MQTT server address, leave empty to disable MQTT function
