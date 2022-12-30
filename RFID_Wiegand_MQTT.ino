@@ -4,10 +4,8 @@
 //
 // Libraries:
 // - Wiegand library: https://github.com/monkeyboard/Wiegand-Protocol-Library-for-Arduino
-// - FastLED by Daniel Garcia
 // - ArduinoJson: install latest from version 5
-// RFID reader: https://fr.aliexpress.com/item/1005002950625296.html?spm=a2g0o.order_list.order_list_main.10.5e0e5e5bDuaGXO&gatewayAdapt=glo2fra
-
+// RFID reader:https://www.aliexpress.us/item/2255800218315792.html?spm=a2g0s.imconversation.0.0.6eba3e5f1kzDql&_randl_shipto=CN&gatewayAdapt=4itemAdapt
 //
 // NodeMCU pinout:
 // D6: green wire of the reader(d0)
@@ -19,7 +17,7 @@
 // D2: ibutton 
 // D0: relay1 ventouse
 // D1: relay2 led clavier
-// D2: relay3
+// D2: relay3BUZZER
 // D3: relay4
 // A0: input switch (BP sortie)
 
@@ -40,7 +38,7 @@ PubSubClient mqtt(mqtt_server, 1883, 0, espClient);
 
 
 void setup() {
-  Serial.begin(115200);  
+	Serial.begin(115200);  
   // default Wiegand Pin 2 and Pin 3 see image on README.md
   // for non UNO board, use wg.begin(pinD0, pinD1) where pinD0 and pinD1 
   // are the pins connected to D0 and D1 of wiegand reader respectively.
