@@ -9,7 +9,8 @@
 #define RELAY4 2
 #define ANALOGINPUT A0
 #define IBUTTONPIN 4
-
+#define ANALOGINPUT2 14
+#define ANALOGINPUT3 15
 #define NUM_LEDS 1
 #define LED_TYPE    WS2812
 #define COLOR_ORDER GRB
@@ -17,6 +18,8 @@
 
 unsigned long lastStatus, lastBME, seconds, lastKey, lastPin, lastRfid, lastiButtonTime, lastAnalog, lastPulse1, lastPulse2;
 String mqttStat = "";
+bool etatCMPrec = HIGH;
+bool etatsonettePrec = HIGH;
 unsigned long rfidcount = 0;
 unsigned long pincount = 0;
 unsigned long ibuttoncount = 0;
