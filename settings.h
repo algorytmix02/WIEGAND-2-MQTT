@@ -6,13 +6,13 @@
 #define BRIGHTNESS  64        // Default LED brightness.
 #define ANALOGRATE 250        // Analog input query frequency
 #define PULSEDELAY 250        // Length of the pulse output
-#define badgemaitre1 7549741 // badge maitre 1 qui sert a ouvrir la porte coute que coute ( voir au dos du badge aprés les 000)
-#define badgemaitre2 8406068
+#define badgemaitre1 7770107 // badge maitre 1 qui sert a ouvrir la porte coute que coute (badge noir) ( voir au dos du badge aprés les 000)
+#define badgemaitre2 7532013
 #define delaisortie 5000      // ici le delai de sortie aprés avoir relacher ton BP, sauf si pas de wifi ou mqtt c'est l'inverse
-const char *codeclamerde="12345";           // Ici tu modifie ton code "c'est la merde" qui deverouille la porte quoi qu'il arrive
-const char *ssid = "SSID";                     // Wifi SSID
-const char *password = "MDP";              // Wifi password
-const char* mqtt_server = "IPMOSQUITTO";               // MQTT server address, leave empty to disable MQTT function
+const char *codeclamerde="101008";           // Ici tu modifie ton code "c'est la merde" qui deverouille la porte quoi qu'il arrive
+const char *ssid = "Tenda2";                     // Wifi SSID
+const char *password = "3yB3G7PE";              // Wifi password
+const char* mqtt_server = "192.168.0.103";               // MQTT server address, leave empty to disable MQTT function
 const char* mqtt_user = "jeedom";                          // MQTT user id
 const char* mqtt_password = "jeedom";                      // MQTT password
 const char* clientID = "rfid2";                     // MQTT client ID
@@ -26,3 +26,5 @@ const char* topicPulse1 = "rfid/pulse1";          // Short Pulse on Relay 1
 const char* topicPulse2 = "rfid/pulse2";          // Short Pulse on Relay 2
 const char* topicLight = "rfid/light";          // change the light
 const char* topicInput = "rfid/input";          // input sensor value
+const char* topicInput2 = "rfid/Contact";          // Contact magnetique
+const char* topicInput3 = "rfid/sonette";          // Contact magnetique
