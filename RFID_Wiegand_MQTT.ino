@@ -4,23 +4,23 @@
 //
 // Libraries:
 // - Wiegand library: https://github.com/monkeyboard/Wiegand-Protocol-Library-for-Arduino
+// - FastLED by Daniel Garcia
 // - ArduinoJson: install latest from version 5
-// RFID reader:https://www.aliexpress.us/item/2255800218315792.html?spm=a2g0s.imconversation.0.0.6eba3e5f1kzDql&_randl_shipto=CN&gatewayAdapt=4itemAdapt
+// RFID reader: https://fr.aliexpress.com/item/1005002950625296.html?spm=a2g0o.order_list.order_list_main.10.5e0e5e5bDuaGXO&gatewayAdapt=glo2fra
+
 //
 // NodeMCU pinout:
-// D6: green wire of the reader(d0)
-// D7: white wire of the reader(d1)
-// GND: black wire of the reader
-// 5V: 5V of the neopixel
-// GND: GND of the neopixel
-// D5: DataIn of the neopixel
-// D2: ibutton 
-// D0: relay1 ventouse
-// D1: relay2 led clavier
-// D2: relay3BUZZER
-// D3: relay4
-// A0: input switch (BP sortie)
-
+//D6: (d0) du lecteur wiegand
+//D7: (d1) du lecteur wiegand
+//GND: GND du lecteur wiegand ( et gnd de l'alim)
+//5V: + du lecteur wiegand (et + de l'alim )
+//D5: Contact magnétique 
+//D2: Encore libre pour le moment
+//D0: relais 1 (ventouse, gâche ou portail) pour les portails on rentre par l'entrée BP de la carte électronique et on cable entre COM et NO
+//D1:led clavier
+//D3: Buzzer clavier
+//A0: Bouton de sortie (uniquement)
+//D8: sonnette ou contact magnétique supplémentaire
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
@@ -29,7 +29,7 @@
 #include "globals.h"
 #include "settings.h"
 #include <ArduinoJson.h>
-
+//int etatCM;
 WIEGAND wg;
 MDNSResponder mdns;
 ESP8266WebServer server(80);
@@ -38,7 +38,7 @@ PubSubClient mqtt(mqtt_server, 1883, 0, espClient);
 
 
 void setup() {
-	Serial.begin(115200);  
+  Serial.begin(115200);  
   // default Wiegand Pin 2 and Pin 3 see image on README.md
   // for non UNO board, use wg.begin(pinD0, pinD1) where pinD0 and pinD1 
   // are the pins connected to D0 and D1 of wiegand reader respectively.
@@ -47,6 +47,8 @@ void setup() {
   Serial.println("Wiegand RFID reader");
 
   // Initiate the relay outputs
+   pinMode(ANALOGINPUT2, INPUT_PULLUP);
+   pinMode(ANALOGINPUT3, INPUT_PULLUP);
   digitalWrite(RELAY1, LOW);
   pinMode(RELAY1, OUTPUT);
   digitalWrite(RELAY2, LOW);
@@ -225,6 +227,8 @@ void setup() {
 void loop() {
   handleWiegand();
   handleAnalogInput();
+ handleAnalogInput2();
+ handleAnalogInput3();
   handleMQTTStatus();
   handlePulseReset();
   // Handle MQTT connection/reconnection
@@ -266,10 +270,48 @@ void handleAnalogInput() {
       Serial.println("  -> MQTT sent");
     }
   }
+  }
+
+
+
+void handleAnalogInput2(){
+  bool etatCM = (digitalRead(ANALOGINPUT2) == LOW); // Lire l'état actuel du bouton
+  
+  if (etatCM && !etatCMPrec) {
+    // Le bouton est enfoncé pour la première fois
+    Serial.println("Portail fermé");
+    mqtt.publish(topicInput2, "0");
+    // Ajoutez ici le code que vous souhaitez exécuter lorsque le bouton est enfoncé
+  } else if (!etatCM && etatCMPrec) {
+    // Le bouton est relâché pour la première fois
+    Serial.println("Portail Ouvert");
+    mqtt.publish(topicInput2, "1");
+    // Ajoutez ici le code que vous souhaitez exécuter lorsque le bouton est relâché
+  }
+  
+  etatCMPrec = etatCM; // Mettre à jour l'état précédent du bouton
+  
+  delay(100); // Ajouter un court délai pour éviter les rebonds
 }
-
-
-
+void handleAnalogInput3(){
+  bool etatsonette = (digitalRead(ANALOGINPUT3) == LOW); // Lire l'état actuel du bouton
+  
+  if (etatsonette && !etatsonettePrec) {
+    // Le bouton est enfoncé pour la première fois
+    Serial.println("sonette 0");
+    mqtt.publish(topicInput3, "0");
+    // Ajoutez ici le code que vous souhaitez exécuter lorsque le bouton est enfoncé
+  } else if (!etatsonette && etatsonettePrec) {
+    // Le bouton est relâché pour la première fois
+    Serial.println("sonette 1");
+    mqtt.publish(topicInput3, "1");
+    // Ajoutez ici le code que vous souhaitez exécuter lorsque le bouton est relâché
+  }
+  
+  etatsonettePrec = etatsonette; // Mettre à jour l'état précédent du bouton
+  
+  delay(100); // Ajouter un court délai pour éviter les rebonds
+}
 // This resets the relay output when it was turned on in pulse mode
 void handlePulseReset() {
   if ((pulse1State)&&(millis()-lastPulse1>250)) {
