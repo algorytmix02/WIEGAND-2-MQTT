@@ -10,21 +10,20 @@
 #define badgemaitre2 7532013
 #define delaisortie 5000      // ici le delai de sortie aprés avoir relacher ton BP, sauf si pas de wifi ou mqtt c'est l'inverse
 const char *codeclamerde="101008";           // Ici tu modifie ton code "c'est la merde" qui deverouille la porte quoi qu'il arrive
-const char *ssid = "Tenda2";                     // Wifi SSID
-const char *password = "3yB3G7PE";              // Wifi password
-const char* mqtt_server = "192.168.0.103";               // MQTT server address, leave empty to disable MQTT function
+const char *ssid = "SSID";                     // Wifi SSID
+const char *password = "MDP";              // Wifi password
+const char* mqtt_server = "192.168.X.XXX";               // MQTT server address, leave empty to disable MQTT function
 const char* mqtt_user = "jeedom";                          // MQTT user id
 const char* mqtt_password = "jeedom";                      // MQTT password
 const char* clientID = "rfid2";                     // MQTT client ID
 const char* topicStatus = "rfid/status";          // MQTT topic where the device sends updates every 10 seconds
 const char* topicEvent = "rfid/event";          // pin code entered, or card scanned
-const char* topicRelay1 = "rfid/relay1";          // Relay 1 On/Off
-const char* topicRelay2 = "rfid/relay2";          // Relay 2 On/Off
-const char* topicRelay3 = "rfid/relay3";          // Relay 3 On/Off
+const char* topicRelay1 = "rfid/PORTE";          // Relay 1 On/Off
+const char* topicRelay2 = "rfid/LEDCLAVIER";          // Relay 2 On/Off
+const char* topicRelay3 = "rfid/BUZZER";          // Relay 3 On/Off
 const char* topicRelay4 = "rfid/relay4";          // Relay 4 On/Off
-const char* topicPulse1 = "rfid/pulse1";          // Short Pulse on Relay 1
-const char* topicPulse2 = "rfid/pulse2";          // Short Pulse on Relay 2
-const char* topicLight = "rfid/light";          // change the light
-const char* topicInput = "rfid/input";          // input sensor value
+const char* topicPulse1 = "rfid/pulsePorte";          // Short Pulse on Relay 1
+const char* topicPulse2 = "rfid/pulseLED";          // Short Pulse on Relay 2
+const char* topicInput = "rfid/BoutonSortie";          // input sensor value
 const char* topicInput2 = "rfid/Contact";          // Contact magnetique
-const char* topicInput3 = "rfid/sonette";          // Contact magnetique
+const char* topicInput3 = "rfid/sonette";          // Contact magnetique ou sonette
